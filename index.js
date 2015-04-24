@@ -1,13 +1,4 @@
 /**
- * Module dependencies.
- */
-var colorString = require("color-string");
-/**
- * Constantes
- */
-var RGBA = /rgba\s*\((\s*(\d+)\s*(,)\s*){3}(\s*(\d?\.\d+)\s*)\)$/i
-
-/**
  * PostCSS plugin to transform rgba() to hexadecimal
  */
 module.exports = function plugin() {
@@ -39,14 +30,31 @@ module.exports = function plugin() {
  * @return {String}        converted declaration value to hexadecimal
  */
 function transformRgba(string) {
-  var value = RGBA.exec(string)
-  if (!value) {
-    return
+  var start = string.indexOf("rgba")
+  var index = start + 4
+  var end
+  var result
+
+  if (index !== -1) {
+    while (string[index] == 0) {
+      index += 1
+    }
+
+    if (string[index] === "(") {
+      index += 1
+      end = string.indexOf(')', index);
+      if (end > -1) {
+        end += 1
+        // pop transparency
+        result = string.substring(index, end).split(",").slice(0, -1).map(function(item) {
+          // convert to hex
+          var hex = Number(item.trim()).toString(16).toUpperCase()
+          // correct double-char value
+          return hex.length === 1 ? hex + hex : hex
+        }).join("")
+
+        return string.substring(0, start) + "#" + result + string.substring(end)
+      }
+    }
   }
-
-  var rgb = colorString.getRgb(value[0])
-  var hex = colorString.hexString(rgb)
-  hex = string.replace(RGBA, hex)
-
-  return (hex)
 }

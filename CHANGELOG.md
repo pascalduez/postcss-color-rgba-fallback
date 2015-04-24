@@ -1,3 +1,7 @@
+# 1.2.0 - 2015-04-24
+
+Parse by string functions instead of regular expressions
+
 # 1.1.1 - 2015-04-24
 
 Fixed: detect if there is already a fallback.
