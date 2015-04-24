@@ -11,7 +11,8 @@ module.exports = function plugin() {
       // if previous prop equals current prop
       // if previous prop has hexadecimal value and current prop has rgba() value
       // no need fallback
-      if (decl.prev() && decl.prev().prop === decl.prop && decl.value.indexOf("rgba") === decl.prev().value.indexOf("#")) {
+      var prev = decl.prev()
+      if (prev && prev.prop === decl.prop && decl.value.indexOf("rgba") === prev.value.indexOf("#")) {
         return
       }
 
@@ -30,31 +31,25 @@ module.exports = function plugin() {
  * @return {String}        converted declaration value to hexadecimal
  */
 function transformRgba(string) {
-  var start = string.indexOf("rgba")
-  var index = start + 4
+  var start = string.indexOf("rgba(")
   var end
   var result
 
-  if (index !== -1) {
-    while (string[index] == 0) {
-      index += 1
-    }
+  if (start !== -1) {
+    // slice 'rgba('
+    start += 5
+    end = string.indexOf(")", start)
+    if (end !== -1) {
+      // pop transparency
+      result = string.substring(start, end).split(",").slice(0, -1).map(function(item) {
+        // convert to hex
+        var hex = Number(item.trim()).toString(16).toUpperCase()
+        // correct double-char value
+        return hex.length === 1 ? hex + hex : hex
+      }).join("")
 
-    if (string[index] === "(") {
-      index += 1
-      end = string.indexOf(')', index);
-      if (end > -1) {
-        end += 1
-        // pop transparency
-        result = string.substring(index, end).split(",").slice(0, -1).map(function(item) {
-          // convert to hex
-          var hex = Number(item.trim()).toString(16).toUpperCase()
-          // correct double-char value
-          return hex.length === 1 ? hex + hex : hex
-        }).join("")
-
-        return string.substring(0, start) + "#" + result + string.substring(end)
-      }
+      // slice before 'rgba' and after ')'
+      return string.substring(0, start - 5) + "#" + result + string.substring(end + 1)
     }
   }
 }
